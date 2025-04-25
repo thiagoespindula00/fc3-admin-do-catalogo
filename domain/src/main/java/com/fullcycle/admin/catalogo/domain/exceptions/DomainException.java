@@ -1,16 +1,16 @@
 package com.fullcycle.admin.catalogo.domain.exceptions;
 
-import com.fullcycle.admin.catalogo.domain.category.CategoryID;
+
 import com.fullcycle.admin.catalogo.domain.validation.Error;
 
 import java.util.List;
 
-public class DomainException extends RuntimeException {
+public class DomainException extends NoStacktraceException {
 
     private final List<Error> errors;
 
     private DomainException(List<Error> errors) {
-        super("", null, true, false);
+        super("");
         this.errors = errors;
     }
 

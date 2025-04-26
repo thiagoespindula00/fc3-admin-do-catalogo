@@ -39,6 +39,28 @@ public class Category extends AggregateRoot<CategoryID> {
         return new Category(id, name, description, isActive, now, now, deletedAt);
     }
 
+    @Override
+    public void validate(ValidationHandler handler) {
+        new CategoryValidator(this, handler).validate();
+    }
+
+    public Category activate() {
+        this.deletedAt = null;
+        this.isActive = true;
+        this.updatedAt = Instant.now();
+        return this;
+    }
+
+    public Category deactivate() {
+        if (getDeletedAt() == null) {
+            this.deletedAt = Instant.now();
+        }
+
+        this.isActive = false;
+        this.updatedAt = Instant.now();
+        return this;
+    }
+
     public String getName() {
         return name;
     }
@@ -61,10 +83,5 @@ public class Category extends AggregateRoot<CategoryID> {
 
     public Instant getDeletedAt() {
         return deletedAt;
-    }
-
-    @Override
-    public void validate(ValidationHandler handler) {
-        new CategoryValidator(this, handler).validate();
     }
 }

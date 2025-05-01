@@ -2,6 +2,7 @@ package com.fullcycle.admin.catalogo.application.category.create;
 
 import com.fullcycle.admin.catalogo.domain.category.CategoryGateway;
 import com.fullcycle.admin.catalogo.domain.exceptions.DomainException;
+import com.fullcycle.admin.catalogo.domain.validation.handler.Notification;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,8 +39,10 @@ public class CreateCategoryUseCaseTest {
 
         final var command = CreateCategoryCommand.with(expectedName, expectedDescription, expectedIsActive);
 
-        Mockito.when(categoryGateway.create(Mockito.any())).thenAnswer(returnsFirstArg());
-        final var output = useCase.execute(command);
+        Mockito.when(categoryGateway.create(Mockito.any()))
+                .thenAnswer(returnsFirstArg());
+
+        final var output = useCase.execute(command).get();
 
         Assertions.assertNotNull(output);
         Assertions.assertNotNull(output.id());
@@ -58,7 +61,7 @@ public class CreateCategoryUseCaseTest {
 
     // Teste passando uma propriedade inválida
     @Test
-    public void givenAInvalidName_whenCallsCreateCaregory_thenShouldReturnDomainException() {
+    public void givenAInvalidName_whenCallsCreateCategory_thenShouldReturnDomainException() {
         final String expectedName = null;
         final var expectedDescription = "Uma categoria legal";
         final var expectedIsActive = true;
@@ -67,9 +70,10 @@ public class CreateCategoryUseCaseTest {
 
         final var command = CreateCategoryCommand.with(expectedName, expectedDescription, expectedIsActive);
 
-        final var exception = Assertions.assertThrows(DomainException.class, () -> useCase.execute(command));
+        final var notification = useCase.execute(command).getLeft();
 
-        Assertions.assertEquals(expectedErrorMessage, exception.getErrors().getFirst().message());
+        Assertions.assertEquals(expectedErrorCount, notification.getErrors().size());
+        Assertions.assertEquals(expectedErrorMessage, notification.firstError().message());
 
         Mockito.verify(categoryGateway, Mockito.times(0)).create(Mockito.any());
     }
@@ -84,7 +88,7 @@ public class CreateCategoryUseCaseTest {
         final var command = CreateCategoryCommand.with(expectedName, expectedDescription, expectedIsActive);
 
         Mockito.when(categoryGateway.create(Mockito.any())).thenAnswer(returnsFirstArg());
-        final var output = useCase.execute(command);
+        final var output = useCase.execute(command).get();
 
         Assertions.assertNotNull(output);
         Assertions.assertNotNull(output.id());
@@ -108,19 +112,19 @@ public class CreateCategoryUseCaseTest {
         final var expectedDescription = "Uma categoria legal";
         final var expectedIsActive = true;
         final var expectedErrorMessage = "Gateway error";
+        final var expectedErrorCount = 1;
 
         final var command = CreateCategoryCommand.with(expectedName, expectedDescription, expectedIsActive);
 
         Mockito.when(categoryGateway.create(Mockito.any()))
                 .thenThrow(new IllegalStateException(expectedErrorMessage));
 
-        final var exception = Assertions.assertThrows(IllegalStateException.class, () -> useCase.execute(command));
+        final var notification = useCase.execute(command).getLeft();
 
+        Assertions.assertEquals(expectedErrorCount, notification.getErrors().size());
+        Assertions.assertEquals(expectedErrorMessage, notification.firstError().message());
 
-        Assertions.assertEquals(expectedErrorMessage, exception.getMessage());
-
-        Mockito.verify(categoryGateway, Mockito.times(1))
-                .create(Mockito.argThat(category ->
+        Mockito.verify(categoryGateway, Mockito.times(0)).create(Mockito.argThat(category ->
                         Objects.equals(expectedName, category.getName()) &&
                                 Objects.equals(expectedDescription, category.getDescription()) &&
                                 Objects.equals(expectedIsActive, category.isActive()) &&

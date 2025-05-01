@@ -3,6 +3,7 @@ package com.fullcycle.admin.catalogo.domain.exceptions;
 
 import com.fullcycle.admin.catalogo.domain.validation.Error;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DomainException extends NoStacktraceException {
@@ -16,6 +17,10 @@ public class DomainException extends NoStacktraceException {
 
     public static DomainException with(final List<Error> errors) {
         return new DomainException(errors);
+    }
+
+    public static DomainException with(final Error error) {
+        return new DomainException(new ArrayList<>(List.of(error)));
     }
 
     public List<Error> getErrors() {
